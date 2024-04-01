@@ -1,0 +1,51 @@
+[gd_scene load_steps=8 format=3 uid="uid://uf743qfu2ggm"]
+
+[ext_resource type="Script" path="res://Camera/CameraPivot.cs" id="1_pgpss"]
+[ext_resource type="Material" uid="uid://bfpuhm44306iy" path="res://Camera/FoW_Material.tres" id="2_hfvp8"]
+[ext_resource type="Script" path="res://Camera/Fog.cs" id="3_tqsw7"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_a2t1d"]
+sky_top_color = Color(0.466667, 0.541176, 0.639216, 1)
+sky_energy_multiplier = 2.0
+
+[sub_resource type="Sky" id="Sky_8kf4n"]
+sky_material = SubResource("ProceduralSkyMaterial_a2t1d")
+
+[sub_resource type="Environment" id="Environment_yiaie"]
+background_mode = 2
+sky = SubResource("Sky_8kf4n")
+sky_custom_fov = 117.9
+ambient_light_source = 3
+reflected_light_source = 2
+tonemap_mode = 2
+ssil_enabled = true
+fog_light_color = Color(0.882353, 0.898039, 0.913725, 1)
+fog_sun_scatter = 0.1
+fog_density = 0.1112
+
+[sub_resource type="QuadMesh" id="QuadMesh_rup51"]
+flip_faces = true
+size = Vector2(2, 2)
+
+[node name="CameraPivot" type="Node3D"]
+transform = Transform3D(1, 0, -1.74846e-07, 0, 1, 0, 1.74846e-07, 0, 1, 0, 0, 0)
+script = ExtResource("1_pgpss")
+zoomFactor = 20.0
+minZoom = 30.0
+maxZoom = 120.0
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 75, 75)
+environment = SubResource("Environment_yiaie")
+projection = 1
+size = 10.0
+
+[node name="Fog" type="MeshInstance3D" parent="Camera3D"]
+transform = Transform3D(1, -1.42109e-14, 1.42109e-14, -1.42109e-14, 1, 0, 1.42109e-14, 0, 1, 0, 0, 0)
+visible = false
+material_override = ExtResource("2_hfvp8")
+extra_cull_margin = 16384.0
+mesh = SubResource("QuadMesh_rup51")
+script = ExtResource("3_tqsw7")
+PlayerFov = 40.0
+PlayerFovCore = 15.0

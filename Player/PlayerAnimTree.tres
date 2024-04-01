@@ -1,0 +1,54 @@
+[gd_resource type="AnimationNodeBlendTree" load_steps=10 format=3 uid="uid://1pwr5sue0e2y"]
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_sltix"]
+animation = &"land"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_w88nn"]
+animation = &"fall"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_hnfdy"]
+animation = &"jump"
+
+[sub_resource type="AnimationNodeBlendSpace1D" id="AnimationNodeBlendSpace1D_pidtn"]
+blend_point_0/node = SubResource("AnimationNodeAnimation_w88nn")
+blend_point_0/pos = -0.3
+blend_point_1/node = SubResource("AnimationNodeAnimation_hnfdy")
+blend_point_1/pos = 0.3
+
+[sub_resource type="AnimationNodeOneShot" id="AnimationNodeOneShot_41yip"]
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_1oagm"]
+animation = &"idle"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_7jito"]
+animation = &"run"
+
+[sub_resource type="AnimationNodeBlendSpace1D" id="AnimationNodeBlendSpace1D_13smk"]
+blend_point_0/node = SubResource("AnimationNodeAnimation_1oagm")
+blend_point_0/pos = 0.0
+blend_point_1/node = SubResource("AnimationNodeAnimation_7jito")
+blend_point_1/pos = 0.3
+
+[sub_resource type="AnimationNodeTransition" id="AnimationNodeTransition_wu1dh"]
+xfade_time = 0.2
+input_0/name = "on-ground"
+input_0/auto_advance = false
+input_0/reset = true
+input_1/name = "in-air"
+input_1/auto_advance = false
+input_1/reset = true
+
+[resource]
+graph_offset = Vector2(-482.358, -127.158)
+nodes/Animation/node = SubResource("AnimationNodeAnimation_sltix")
+nodes/Animation/position = Vector2(-334.465, 46.051)
+nodes/InAir/node = SubResource("AnimationNodeBlendSpace1D_pidtn")
+nodes/InAir/position = Vector2(-260, 220)
+nodes/Land/node = SubResource("AnimationNodeOneShot_41yip")
+nodes/Land/position = Vector2(-60, -60)
+nodes/OnGround/node = SubResource("AnimationNodeBlendSpace1D_13smk")
+nodes/OnGround/position = Vector2(-280, -140)
+nodes/RootState/node = SubResource("AnimationNodeTransition_wu1dh")
+nodes/RootState/position = Vector2(180, 120)
+nodes/output/position = Vector2(380, 160)
+node_connections = [&"Land", 0, &"OnGround", &"Land", 1, &"Animation", &"RootState", 0, &"Land", &"RootState", 1, &"InAir", &"output", 0, &"RootState"]

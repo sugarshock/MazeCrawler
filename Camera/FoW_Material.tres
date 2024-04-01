@@ -1,0 +1,39 @@
+[gd_resource type="ShaderMaterial" load_steps=6 format=3 uid="uid://bfpuhm44306iy"]
+
+[ext_resource type="Shader" path="res://Camera/fog.gdshader" id="1_pb725"]
+[ext_resource type="Texture2D" uid="uid://b4o2avo04y3v5" path="res://test.png" id="2_07cuj"]
+
+[sub_resource type="Gradient" id="Gradient_5djvs"]
+offsets = PackedFloat32Array(0.411017, 1)
+colors = PackedColorArray(0.0903, 0.271473, 0.43, 1, 0.556953, 0.556953, 0.556953, 1)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_jrdhj"]
+noise_type = 2
+frequency = 0.0016
+fractal_type = 3
+fractal_lacunarity = 1.7
+fractal_gain = 0.6
+fractal_weighted_strength = 0.04
+fractal_ping_pong_strength = 3.0
+cellular_distance_function = 1
+cellular_return_type = 2
+domain_warp_enabled = true
+domain_warp_type = 2
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_y7ww3"]
+width = 1024
+height = 1024
+invert = true
+seamless = true
+seamless_blend_skirt = 0.2
+color_ramp = SubResource("Gradient_5djvs")
+noise = SubResource("FastNoiseLite_jrdhj")
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_pb725")
+shader_parameter/fog_speed = 0.01
+shader_parameter/repeat_interval = 200.0
+shader_parameter/offset = null
+shader_parameter/uncoveredWorldPositions = ExtResource("2_07cuj")
+shader_parameter/fogTexture = SubResource("NoiseTexture2D_y7ww3")
