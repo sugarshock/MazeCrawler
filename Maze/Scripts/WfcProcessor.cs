@@ -3,16 +3,13 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 public partial class WfcProcessor : Node3D
 {
 	
 	[Export] public RuleTableResource RuleTable;
-	
 	private static Vector3I[] _directions = new Vector3I[] { new Vector3I(0, 0,1), new Vector3I(1, 0, 0), new Vector3I(0, 0, -1), new Vector3I(-1, 0, 0) };
-
-	private Dictionary<Vector3I, HashSet<Possibility>> _possibilities;
-	private GridMap _gridMap;
 	
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
@@ -22,51 +19,60 @@ public partial class WfcProcessor : Node3D
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
 	public override void _Process(double delta)
 	{
-		if(_possibilities != null && _possibilities.Count > 0)
-			Collapse();
 	}
 	
-	private void Collapse()
+	public void ApplyTo(Chunk chunk, int yLayer)
+	{
+		Task.Run(async () =>
+		{
+			var possibilities = InitializePossibilities(chunk, yLayer);
+			int patience = 200;
+			while (possibilities is { Count: > 0 } && patience-- > 0)
+				Collapse(chunk.Maze, possibilities);
+		});
+	}
+	
+	private void Collapse(Maze maze, Dictionary<Vector3I, HashSet<Possibility>> possibilities)
 	{
 		// find a cell with the smallest number of possibilities
-		var cell = _possibilities.OrderBy(x => x.Value.Count).First().Key;
-		//GD.Print(_possibilities[cell].Count);
+		var cell = possibilities.OrderBy(x => x.Value.Count).First().Key;
+		GD.Print(possibilities[cell].Count);
 		
 		// if its possibilities are empty, remove and return
-		if (_possibilities[cell].Count == 0)
+		if (possibilities[cell].Count == 0)
 		{
-			_possibilities.Remove(cell);
+			possibilities.Remove(cell);
 			return;
 		}
 		
 		// choose a random possibility
-		var fixedConf = _possibilities[cell].OrderBy(x => Guid.NewGuid()).First();
+		var fixedConf = possibilities[cell].OrderBy(x => Guid.NewGuid()).First();
 		// collapse the cell
-		_possibilities.Remove(cell);
+		possibilities.Remove(cell);
 		
 		// set the cell item
-		_gridMap.SetCellItem(cell,fixedConf.Id, fixedConf.Orientation);
+		maze.SetCellItem(cell,fixedConf.Id, orientation: fixedConf.Orientation);
 		
 		// update possibilities of all neighbours
 		foreach (var dir in _directions)
 		{
 			var neighbour = cell + dir;
-			if (_possibilities.ContainsKey(neighbour))
+			if (possibilities.ContainsKey(neighbour))
 			{
 				List<RuleResource> newAllowForNeighbour = RuleTable.RuleTable.Where(x => x.NeighborId == fixedConf.Id && x.NeighborOrientation == fixedConf.Orientation && x.Direction == -dir).ToList();
 				// remove all possibility from neighbour that are not in newAllowForNeighbour
 				
-				_possibilities[neighbour].IntersectWith(newAllowForNeighbour.Select(x => new Possibility(){Id = x.Id, Orientation = x.Orientation}));
+				possibilities[neighbour].IntersectWith(newAllowForNeighbour.Select(x => new Possibility(){Id = x.Id, Orientation = x.Orientation}));
 			}
 		}
 	}
 
-	public void InitializePossibilities(GridMap gridMap, int yLayer)
+	private Dictionary<Vector3I, HashSet<Possibility>> InitializePossibilities(Chunk chunk, int yLayer)
 	{
-		_gridMap = gridMap;
-		var usedCells = gridMap.GetUsedCells()
+		var maze = chunk.Maze;
+		var usedCells = chunk.GetUsedCells()
 			.Where(cell => cell.Y == yLayer)
-			.Where(cell => gridMap.GetCellItem(cell) == 0);
+			.Where(cell => chunk.GetCellItem(cell) == 0);
 		
 		var possibilities = new Dictionary<Vector3I, HashSet<Possibility>>();
 
@@ -81,7 +87,7 @@ public partial class WfcProcessor : Node3D
 				HashSet<Possibility> cValidConfigs = new HashSet<Possibility>();
 				
 				// if neighbour is air
-				if(_gridMap.GetCellItem(neighbour) == GridMap.InvalidCellItem)
+				if(maze.GetCellItem(neighbour) == GridMap.InvalidCellItem)
 					RuleTable.RuleTable.Where(x => x.NeighborId == GridMap.InvalidCellItem && x.Direction == dir)
 										.ToList()
 										.ForEach(rule => cValidConfigs.Add(new Possibility(){Id = rule.Id, Orientation = rule.Orientation}));
@@ -108,7 +114,7 @@ public partial class WfcProcessor : Node3D
 			}
 		}
 
-		_possibilities = possibilities;
+		return possibilities;
 	}
 	
 	public static IEnumerable<RuleResource> Rotations(RuleResource rule)

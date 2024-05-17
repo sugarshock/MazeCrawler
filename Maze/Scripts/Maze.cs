@@ -5,160 +5,240 @@ using System.Text;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Runtime.Versioning;
+using System.Threading.Tasks;
 using Godot.Collections;
+using Vector3I = Godot.Vector3I;
 
-public partial class Maze : GridMap
+public partial class Maze : Node
 {
-	[Export] public float CELL_SIZE {get => Scale.X; set => Scale = new Vector3(value, value, value);}
+	[Export] public int CELL_SIZE { get; set; } = 10;
 	public List<Chunk> Chunks { get; set; } = new List<Chunk>();
 	
-	private static PackedScene TRIGGER_PACK = ResourceLoader.Load<PackedScene>("res://Maze/Scenes/TriggerArea.tscn");
-	private static Vector2I[] _directions = new Vector2I[] { new Vector2I(0, 1), new Vector2I(1, 0), new Vector2I(0, -1), new Vector2I(-1, 0) };
-	
-	private HashSet<Vector2I> _visited = new HashSet<Vector2I>();
+	public HashSet<Vector3I> Visited { get; init; } = new HashSet<Vector3I>();
 	private WfcProcessor _wfcProcessor;
-	private GrassMultiMesh _grassMultiMesh;
 	
 	
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
-		_visited = new HashSet<Vector2I>();
-		BuildChunk(new Vector2I(3,3), 7);
-		_grassMultiMesh = GetNode<GrassMultiMesh>("GrassMultiMesh");
 		_wfcProcessor = GetNode<WfcProcessor>("WfcProcessor");
-		_wfcProcessor.InitializePossibilities(this, 1);
+		BuildChunk(new Vector3I(0,0,3));
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
 	public override void _Process(double delta)
 	{
 	}
-
-	private void BuildChunk( Vector2I entrance, int radius)
-	{	
-		if(radius % 2 == 0)
-			throw new Exception("Radius must be odd");
-		if(GetCellItem(entrance) == 0)
-			throw new Exception("Entrance must not be a wall");
-		
-		BuildFloor(entrance, radius * 10);
-		//_grassMultiMesh.PopulateMeshes(GetMeshes());
-		var chunk = InitializeChunk(entrance, radius);
-		VisitCell(entrance, chunk, 1);
-		CreateExits(chunk, 1);
-		
+	
+	public int GetCellItem(Vector3I cell)
+	{
+		var chunk = Chunks.FirstOrDefault(c => c.Contains(cell), null);
+		return chunk?.GetCellItem(cell) ?? (int) GridMap.InvalidCellItem;
 	}
 	
-	
-	private void VisitCell(Vector2I pos, Chunk chunk, int depth)
+	public bool SetCellItem(Vector3I cell, int value, Chunk chunk = null, int orientation = 0)
 	{
-		_visited.Add(pos);
+		if(chunk == null)
+			chunk = Chunks.FirstOrDefault(c => c.Contains(cell), null);
+		if (chunk == null)
+			return false;
+		chunk.SetCellItem(cell, value, orientation);
+		return true;
+	}
+
+	private void BuildChunk(Vector3I entrance)
+	{	
+		GD.Print("Building new chunk...");
+		if (GetChunkAt(entrance) != null)
+			throw new Exception("Trying to build already existing chunk");
+		
+		var bounds = GetNextChunkPos(entrance);
+		var chunk = Statics.CHUNK_SCENE.Instantiate<Chunk>().Setup(this, bounds.Min, bounds.Max);
+		Chunks.Add(chunk);
+		AddChild(chunk);
+		
+		BuildFloor(chunk);
+		GD.Print("Starting to dig");
+		var possibleExits = Dig(entrance, chunk);
+		SelectExits(chunk, 4, possibleExits);
+		_wfcProcessor.ApplyTo(chunk, chunk.MinCell.Y);
+
+		chunk.PlayerEntered += () => BuildSurroundingChunks(chunk);
+	}
+	
+	private (Vector3I Min, Vector3I Max) GetNextChunkPos(Vector3I entrance)
+	{
+		// for now, make regular chunks of size 10 x 10
+		(Vector3I Min, Vector3I Max) bounds;
+		
+		
+		var chunkSize = 10;
+		
+		bounds.Min = new Vector3I();
+		bounds.Min.X = (int)Math.Floor((double)entrance.X / chunkSize) * chunkSize;
+		bounds.Min.Z = (int)Math.Floor((double)entrance.Z / chunkSize) * chunkSize;
+		bounds.Max = bounds.Min + new Vector3I(chunkSize-1, 0, chunkSize-1);
+		
+		
+		return bounds;
+	}
+	
+	private PriorityQueue<(Vector3I entrance, Vector3I exit), int> Dig(
+		Vector3I pos, 
+		Chunk chunk, 
+		int depth = 0, 
+		PriorityQueue<(Vector3I entrance, Vector3I exit), int> possibleConnections = null)
+	{
+		if (possibleConnections == null)
+			possibleConnections = new PriorityQueue<(Vector3I entrance, Vector3I exit), int>(new IntMaxComparer());
+		
+		Visited.Add(pos);
 		SetCellItem(pos, -1);
 		
-		var wallMod = new Vector2I( 1+Math.Abs(pos.X) % 2, 1+Math.Abs(pos.Y % 2));
+		// 1 for rows that are wall, (2,0,2) for free cells
+		var wallMod = new Vector3I( 1+Math.Abs(pos.X) % 2, 0 , 1+Math.Abs(pos.Z % 2));
 		
-		// find potential exits at this cell and add to priority queue
-		var possibleExits = _directions.Where(d => !chunk.Contains(pos + (d * wallMod)));
-		chunk.PossibleExits.EnqueueRange(possibleExits, depth);
+		// find potential connections to outside at this cell and add to priority queue
+		var exitCandidates = Statics.Directions3I
+			.Select(dir => pos + (dir * wallMod))
+			.Where(exit => !chunk.Contains(exit))
+			.Select(exit => (pos, exit));
+		
+		possibleConnections.EnqueueRange(exitCandidates, depth);
+		
+
 		
 		// directions where next odd cell within radius
-		var possibleDirs = _directions
+		var possibleDirs = Statics.Directions3I
 			.Where(d => chunk.Contains(pos + (d*wallMod)))
 			.OrderBy(x => Guid.NewGuid());
 
 		foreach (var dir in possibleDirs)
 		{	
-			if(_visited.Contains(pos + (dir * wallMod)))
+			if(Visited.Contains(pos + (dir * wallMod)))
 				continue;
 			if (pos + dir != pos + (dir * wallMod))
 			{
 				SetCellItem(pos + dir, -1);
-				_visited.Add(pos + dir);
+				Visited.Add(pos + dir);
 			}
-			VisitCell(pos + (dir * wallMod), chunk, depth + 1);
+			Dig(pos + (dir * wallMod), chunk, depth + 1, possibleConnections);
 		}
-
+		return possibleConnections;
 	}
 
-	private void CreateExits(Chunk chunk, int numberOfExits)
+	private void SelectExits(Chunk chunk, int numberOfConnections, PriorityQueue<(Vector3I entrance, Vector3I exit), int> possibleExits)
 	{
-		foreach (int i in Enumerable.Range(0, Math.Min(numberOfExits, chunk.PossibleExits.Count)))
+		// first get all connections imposed by surrounding chunks
+		var imposedCons = GetSurroundingChunks(chunk).SelectMany(c => c.Connections)
+			.Where(con => GetChunkAt(con.Value) == chunk)
+			.Select(kv => (kv.Value, kv.Key));
+	
+		// get those that connect to a possible path in the current chunk
+		var intersection = possibleExits.UnorderedItems.Where(item => imposedCons.Contains(item.Element)).ToList();
+		// connect the paths
+		foreach (var con in intersection)
 		{
-			var deepest = chunk.PossibleExits.Dequeue();
-			SetCellItem(deepest, -1);
-			_visited.Add(deepest);
-
-			
-			var trigger = TRIGGER_PACK.Instantiate<Area3D>();
-			trigger.Position = MapToLocal(new Vector3I(chunk.Entrance.X, 1, chunk.Entrance.Y));
-			trigger.BodyEntered += (body) =>
-			{
-				if (body is Player)
-				{
-					BuildChunk(deepest, 7);
-					_wfcProcessor.InitializePossibilities(this, 1);
-					trigger.Position = trigger.Position with { Y = 100 };
-				}
-
-			};
-			AddChild(trigger);
+			var exitCell = con.Element.exit;
+			chunk.SetCellItem(exitCell, -1);
+			Visited.Add(exitCell);
 		}
-	}
-
-	// Initialize a chunk of the maze around the center
-	private Chunk InitializeChunk(Vector2I entrance, int radius )
-	{
-		var chunk = new Chunk()
-		{
-			Entrance = entrance,
-			Radius = radius,
-			VisibilityMap = new float[(int) (radius * 2f * CELL_SIZE), (int) (radius * 2f * CELL_SIZE)]
-		};
-		Chunks.Add(chunk);
 		
+		// now take care of remaining exits to empty chunks
+		var numRemaining = numberOfConnections - intersection.Count;
+		while (numRemaining > 0 && possibleExits.Count > 0)
+		{
+			var deepest = possibleExits.Dequeue();
+			
+			if (intersection.Select(_ => _.Element).Contains(deepest))
+				continue;
+			if (chunk.Connections.ContainsKey(deepest.entrance))
+				continue;
+
+			var vec = (deepest.exit - deepest.entrance);
+			if (vec.Length() > 1)
+			{
+				var cellBetween = deepest.entrance + (Vector3I)vec / 2;
+				SetCellItem(cellBetween, -1);
+				Visited.Add(cellBetween);
+			}
+				
+				
+			SetCellItem(deepest.entrance, -1);
+			Visited.Add(deepest.entrance);
+			chunk.Connections.Add(deepest.entrance, deepest.exit);
+			numRemaining--;
+		}
+	}
+	
+	private void BuildFloor(Chunk chunk)
+	{
 		for (int x = chunk.MinCell.X; x <= chunk.MaxCell.X; x++)
 		{
-			for (int y = chunk.MinCell.Y; y <= chunk.MaxCell.Y; y++)
-			{	
-				var pos = new Vector2I(x, y);
-				if(_visited.Contains(pos) || GetCellItem(pos) != InvalidCellItem)
-					continue;
-				if (x % 2 == 0 || y % 2 == 0)
-				{	
-					SetCellItem(pos, 0);
-					// set neighboring walls to wildcard as well
-					_directions.Select(d => pos + d).Where(neighbor => GetCellItem(neighbor) > 0).ToList().ForEach(neighbor => SetCellItem(neighbor, 0));
-				}
-					
-			}
-		}
-
-		return chunk;
-	}
-	
-	private void BuildFloor(Vector2I pos, int radius)
-	{
-		for (int x = pos.X - radius; x <= pos.X + radius; x++)
-		{
-			for (int y = pos.Y - radius; y <= pos.Y + radius; y++)
+			for (int z = chunk.MinCell.Z; z <= chunk.MaxCell.Z; z++)
 			{
-				SetCellItem(new Vector3I(x, 0, y), 6);
+				SetCellItem(new Vector3I(x, -1, z), 6, chunk);
 			}
 		}
 	}
 	
-	private void SetCellItem(Vector2I pos, int item)
+	private void BuildSurroundingChunks(Chunk chunk)
 	{
-		SetCellItem(new Vector3I(pos.X, 1, pos.Y), item);
+		foreach (var dir in Statics.Directions3I)
+		{
+			var cons = chunk.Connections.Where(kv => (kv.Key + dir == kv.Value) || (kv.Key + (2 * dir) == kv.Value))
+				.ToList();
+			if (cons.Count > 0)
+			{
+				var entry = cons.First().Value;
+				if (GetChunkAt(entry) == null)
+					BuildChunk(entry);
+			}
+			else
+			{
+				var midCell = chunk.LocalToMap(chunk.Aabb.GetCenter());
+				if (GetChunkAt(midCell + (6 * dir)) == null)
+					BuildChunk(midCell + (6 * dir));
+			}
+		}
+	}
+
+	public List<Chunk> GetSurroundingChunks(Chunk chunk)
+	{
+		var list = new List<Chunk>()
+		{
+			GetChunkAt(chunk.MinCell + new Vector3I(-1, 0, 0)),
+			GetChunkAt(chunk.MinCell + new Vector3I(0, 0, -1)),
+			GetChunkAt(chunk.MaxCell + new Vector3I(1, 0, 0)),
+			GetChunkAt(chunk.MaxCell + new Vector3I(0, 0, 1))
+		};
+		list.RemoveAll(chunk => chunk == null);
+		return list;
 	}
 	
-	private int GetCellItem(Vector2I pos)
+	public Vector3 MapToLocal(Vector3I cell)
 	{
-		return GetCellItem(new Vector3I(pos.X, 1, pos.Y));
+		return Chunks.First().MapToLocal(cell);
 	}
 	
-	private bool WithinRadius(Vector2I pos, Vector2I center, int radius)
+	public Vector3I LocalToMap(Vector3 position)
+	{
+		return Chunks.First().LocalToMap(position);
+	}
+	
+	public Chunk GetChunkAt(Vector3I cell)
+	{
+		return Chunks.FirstOrDefault(c => c.Contains(cell), null);
+	}
+	
+	public Chunk GetChunkAt(Vector3 position)
+	{	
+		if(Chunks.Count == 0)
+			return null;
+		return GetChunkAt(LocalToMap(position));
+	}
+	
+	/*private bool WithinRadius(Vector2I pos, Vector2I center, int radius)
 	{
 		return Math.Abs(pos.X - center.X) <= radius && Math.Abs(pos.Y - center.Y) <= radius;
 	}
@@ -173,10 +253,7 @@ public partial class Maze : GridMap
 		return chunks.ToList();
 	}
 	
-	public Vector3 MapToGlobal(Vector2I cell)
-	{
-		return ToGlobal(MapToLocal(new Vector3I(cell.X, 1, cell.Y)));
-	}
+
 	
 	public Mesh[] GetGrassMeshes()
 	{
@@ -189,30 +266,8 @@ public partial class Maze : GridMap
 		}
 
 		return new Mesh[] { };
-	}
+	}*/
 
-}
-
-public record Chunk
-{
-	public Vector2I Entrance;
-	public int Radius;
-	public List<Vector2I> Exits = new List<Vector2I>();
-	public PriorityQueue<Vector2I, int> PossibleExits = new PriorityQueue<Vector2I, int>(new IntMaxComparer());
-	public Vector2I MinCell => Entrance - new Vector2I(Radius, Radius);
-	public Vector2I MaxCell => Entrance + new Vector2I(Radius, Radius);
-
-	public float[,] VisibilityMap;
-
-	public bool Contains(Vector2I pos)
-	{
-		return Math.Abs(pos.X - Entrance.X) <= Radius && Math.Abs(pos.Y - Entrance.Y) <= Radius;
-	}
-
-	public bool InVisibilityMapBounds(Vector2I pos)
-	{
-		return pos.X >= 0 && pos.X < VisibilityMap.GetLength(0) && pos.Y >= 0 && pos.Y < VisibilityMap.GetLength(1);
-	}
 }
 
 public class IntMaxComparer : IComparer<int>

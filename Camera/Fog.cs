@@ -19,7 +19,7 @@ public partial class Fog : MeshInstance3D
 	{
 		_material = MaterialOverride as ShaderMaterial;
 		_maze = GetTree().Root.GetNode<Maze>("/root/Maze");
-		Visible = true;
+		//Visible = true;
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -27,25 +27,28 @@ public partial class Fog : MeshInstance3D
 	{
 	}
 	
-	public void UncoverGauss(Vector3 worldPos)
+	public void UncoverGauss(Vector3 position)
 	{	
-		var cell = _maze.LocalToMap(_maze.ToLocal(worldPos));
-		var chunks = _maze.GetChunksAt(worldPos);
+		if(_maze.Chunks.Count == 0)
+			return;
 		
-		foreach (var chunk in chunks)
-			ApplyGaussOn(chunk, worldPos);
+		var cell = _maze.LocalToMap(position); 
+		var chunk = _maze.GetChunkAt(position);
 		
+		if(chunk == null)
+			return;
+		
+		ApplyGaussOn(chunk, position);
 		UpdateTexture();
-		
 	}
 
-	private void ApplyGaussOn(Chunk chunk, Vector3 worldPos)
+	private void ApplyGaussOn(Chunk chunk, Vector3 position)
 	{
 		// this is the world position that corresponds to texel (0,0) in the texture
 		var worldOffset = GetChunkOffset(chunk);
 		
 		// this is the texel that corresponds to the current world position
-		var texPos = worldPos - worldOffset;
+		var texPos = position - worldOffset;
 		
 		foreach(var x in Enumerable.Range((int)-PlayerFov, 2 * (int)PlayerFov))
 		{
@@ -83,9 +86,12 @@ public partial class Fog : MeshInstance3D
 	{
 		var chunks = _maze.Chunks;
 		
+		if(chunks.Count == 0)
+			return;
+		
 		// get pos and dimensions of the texture in pixels
-		var textureOffset = CellToTexel(new Vector2I(chunks.Min(c => c.MinCell.X), chunks.Min(c => c.MinCell.Y)), -0.5f);
-		var imgSize = CellToTexel(new Vector2I(chunks.Max(c => c.MaxCell.X), chunks.Max(c => c.MaxCell.Y)), +0.5f) -
+		var textureOffset = CellToTexel(new Vector3I(chunks.Min(c => c.MinCell.X), 1, chunks.Min(c => c.MinCell.Z)), -0.5f);
+		var imgSize = CellToTexel(new Vector3I(chunks.Max(c => c.MaxCell.X), 1, chunks.Max(c => c.MaxCell.Z)), +0.5f) -
 		              textureOffset;
 
 		var img = Image.Create((int) imgSize.X, (int) imgSize.Y, false, Image.Format.Rgb8);
@@ -93,7 +99,7 @@ public partial class Fog : MeshInstance3D
 		foreach (var chunk in chunks)
 		{	
 			// position of the chunk in the texture in pixels
-			var chunkOffset = CellToTexel(chunk.MinCell) - textureOffset;
+			var chunkOffset = CellToTexel(chunk.MinCell, -0.5f) - textureOffset;
 
 			for(var x = 0; x < chunk.VisibilityMap.GetLength(0); x++)
 			{
@@ -135,20 +141,19 @@ public partial class Fog : MeshInstance3D
 
 	private Vector3 GetChunkOffset(Chunk chunk)
 	{	
-		var cell = new Vector3I(chunk.MinCell.X, 1, chunk.MinCell.Y);
-		return _maze.ToGlobal(_maze.MapToLocal(cell));
+		var cell = new Vector3I(chunk.MinCell.X, 1, chunk.MinCell.Z);
+		return _maze.MapToLocal(cell);
 	}
 
 	private Vector2 CellTo2DWorld(Vector3I cell)
 	{
 			var local = _maze.MapToLocal(cell);
-			var global = _maze.ToGlobal(local);
-			return new Vector2(global.X, global.Z);
+			return new Vector2(local.X, local.Z);
 	}
 	
-	private Vector2I CellToTexel(Vector2I cell, float cornerFactor = 0f)
+	private Vector2I CellToTexel(Vector3I cell, float cornerFactor = 0f)
 	{
-		var global = _maze.MapToGlobal(cell) + (cornerFactor * Vector3.One * _maze.CELL_SIZE);
+		var global = _maze.MapToLocal(cell) + (cornerFactor * Vector3.One * _maze.CELL_SIZE);
 		return new Vector2I((int) global.X, (int) global.Z);
 	}
 }
