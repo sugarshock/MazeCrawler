@@ -25,24 +25,24 @@ public partial class WfcProcessor : Node3D
 	{
 		Task.Run(async () =>
 		{
-			var possibilities = InitializePossibilities(chunk, yLayer);
+			var possibilities = await InitializePossibilities(chunk, yLayer);
 			int patience = 200;
 			while (possibilities is { Count: > 0 } && patience-- > 0)
-				Collapse(chunk.Maze, possibilities);
+				await Collapse(chunk.Maze, possibilities);
+			
 		});
 	}
 	
-	private void Collapse(Maze maze, Dictionary<Vector3I, HashSet<Possibility>> possibilities)
+	private Task Collapse(Maze maze, Dictionary<Vector3I, HashSet<Possibility>> possibilities)
 	{
 		// find a cell with the smallest number of possibilities
 		var cell = possibilities.OrderBy(x => x.Value.Count).First().Key;
-		GD.Print(possibilities[cell].Count);
 		
 		// if its possibilities are empty, remove and return
 		if (possibilities[cell].Count == 0)
 		{
 			possibilities.Remove(cell);
-			return;
+			return Task.CompletedTask;
 		}
 		
 		// choose a random possibility
@@ -65,9 +65,10 @@ public partial class WfcProcessor : Node3D
 				possibilities[neighbour].IntersectWith(newAllowForNeighbour.Select(x => new Possibility(){Id = x.Id, Orientation = x.Orientation}));
 			}
 		}
+		return Task.CompletedTask;
 	}
 
-	private Dictionary<Vector3I, HashSet<Possibility>> InitializePossibilities(Chunk chunk, int yLayer)
+	private async Task<Dictionary<Vector3I, HashSet<Possibility>>> InitializePossibilities(Chunk chunk, int yLayer)
 	{
 		var maze = chunk.Maze;
 		var usedCells = chunk.GetUsedCells()

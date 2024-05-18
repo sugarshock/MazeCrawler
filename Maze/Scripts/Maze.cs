@@ -22,6 +22,7 @@ public partial class Maze : Node
 	public override void _Ready()
 	{
 		_wfcProcessor = GetNode<WfcProcessor>("WfcProcessor");
+		Events.PlayerEnteredChunk += BuildSurroundingChunks;
 		BuildChunk(new Vector3I(0,0,3));
 	}
 
@@ -62,8 +63,6 @@ public partial class Maze : Node
 		var possibleExits = Dig(entrance, chunk);
 		SelectExits(chunk, 4, possibleExits);
 		_wfcProcessor.ApplyTo(chunk, chunk.MinCell.Y);
-
-		chunk.PlayerEntered += () => BuildSurroundingChunks(chunk);
 	}
 	
 	private (Vector3I Min, Vector3I Max) GetNextChunkPos(Vector3I entrance)
@@ -184,6 +183,10 @@ public partial class Maze : Node
 	
 	private void BuildSurroundingChunks(Chunk chunk)
 	{
+		if (!chunk.IsBoundary)
+			return;
+		chunk.IsBoundary = true;
+		
 		foreach (var dir in Statics.Directions3I)
 		{
 			var cons = chunk.Connections.Where(kv => (kv.Key + dir == kv.Value) || (kv.Key + (2 * dir) == kv.Value))
@@ -227,7 +230,8 @@ public partial class Maze : Node
 	}
 	
 	public Chunk GetChunkAt(Vector3I cell)
-	{
+	{	
+		// this sucks! I should use a spatial index
 		return Chunks.FirstOrDefault(c => c.Contains(cell), null);
 	}
 	

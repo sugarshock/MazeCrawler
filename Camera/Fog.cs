@@ -2,6 +2,7 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 public partial class Fog : MeshInstance3D
 {
@@ -9,6 +10,8 @@ public partial class Fog : MeshInstance3D
 	[Export] public float PlayerFovCore = 5;
 	private ShaderMaterial _material;
 	private Maze _maze;
+
+	private Chunk _currentChunk;
 	//public Dictionary<Vector3I, float> UncoveredCells = new Dictionary<Vector3I, float>();
 	
 	[Export(PropertyHint.ResourceType, "ImageTexture")] ImageTexture TestTexture { get; set; }
@@ -19,6 +22,7 @@ public partial class Fog : MeshInstance3D
 	{
 		_material = MaterialOverride as ShaderMaterial;
 		_maze = GetTree().Root.GetNode<Maze>("/root/Maze");
+		Events.PlayerEnteredChunk += OnPlayerEntered;
 		//Visible = true;
 	}
 
@@ -27,22 +31,32 @@ public partial class Fog : MeshInstance3D
 	{
 	}
 	
-	public void UncoverGauss(Vector3 position)
+	public void OnPlayerEntered(Chunk chunk)
+	{	
+		GD.Print("Player entered chunk");
+		_currentChunk = chunk;
+	}
+	
+	public void OnPlayerPositionChanged(Vector3 position)
+	{
+		UncoverGauss(position);
+	}
+	
+	public async void UncoverGauss(Vector3 position)
 	{	
 		if(_maze.Chunks.Count == 0)
 			return;
 		
 		var cell = _maze.LocalToMap(position); 
-		var chunk = _maze.GetChunkAt(position);
 		
-		if(chunk == null)
+		if(_currentChunk == null)
 			return;
 		
-		ApplyGaussOn(chunk, position);
+		await Task.Run(() => ApplyGaussOn(_currentChunk, position));
 		UpdateTexture();
 	}
 
-	private void ApplyGaussOn(Chunk chunk, Vector3 position)
+	private async void ApplyGaussOn(Chunk chunk, Vector3 position)
 	{
 		// this is the world position that corresponds to texel (0,0) in the texture
 		var worldOffset = GetChunkOffset(chunk);

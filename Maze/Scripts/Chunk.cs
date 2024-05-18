@@ -5,7 +5,6 @@ using System.Linq;
 
 public partial class Chunk : GridMap
 {
-	public Action PlayerEntered;
 	
 	[Export] public Vector3I MinCell { get; private set; }
 	[Export] public Vector3I MaxCell { get; private set; }
@@ -15,6 +14,8 @@ public partial class Chunk : GridMap
 	public float[,] VisibilityMap { get; private set; }
 	
 	public Aabb Aabb { get; private set; }
+
+	public bool IsBoundary = true;
 	
 	
 	private Area3D _triggerArea;
@@ -30,11 +31,7 @@ public partial class Chunk : GridMap
 		_triggerArea = GetNode<Area3D>("TriggerArea");
 		_triggerArea.Position = Aabb.GetCenter();
 		_triggerArea.Scale = Aabb.Size;
-		_triggerArea.BodyEntered += body =>
-		{ 
-			if (body is Player) PlayerEntered?.Invoke();
-		};
-		PlayerEntered += () => GD.Print("Player entered chunk" + Name);
+		_triggerArea.BodyEntered += OnBodyEntered;
 	}
 	
 	public Chunk Setup(Maze maze, Vector3I minCell, Vector3I maxCell)
@@ -43,7 +40,8 @@ public partial class Chunk : GridMap
 		MinCell = minCell;
 		MaxCell = maxCell;
 		Connections = new Dictionary<Vector3I, Vector3I>();
-		Scale = new Vector3(maze.CELL_SIZE, maze.CELL_SIZE, maze.CELL_SIZE);
+		CellSize = new Vector3(maze.CELL_SIZE, maze.CELL_SIZE, maze.CELL_SIZE);
+		CellScale = maze.CELL_SIZE;
 		
 		InitializeChunk();
 		SetupVisibilityMap();
@@ -104,6 +102,17 @@ public partial class Chunk : GridMap
 	{
 		return pos.X >= 0 && pos.X < VisibilityMap.GetLength(0) && pos.Y >= 0 && pos.Y < VisibilityMap.GetLength(1);
 	}
+	
+	public void OnBodyEntered(Node body)
+	{
+		if (body is Player)
+		{	
+			Events.PlayerEnteredChunk?.Invoke(this);
+			GD.Print("Player entered chunk" + Name);
+		}
+			
+	}
+
 	
 	
 }

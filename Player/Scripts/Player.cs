@@ -4,7 +4,7 @@ using System;
 public partial class Player : CharacterBody3D
 {
 
-	public Action<Vector3> PositionChanged;
+	private Action<Vector3> PositionChanged;
 
 	[Export] public float Speed = 10.0f;
 	public const float JumpVelocity = 5.0f;
@@ -32,7 +32,7 @@ public partial class Player : CharacterBody3D
 		AnimTree = GetNode<AnimationTree>("AnimationTree");
 		AnimTree.Set("parameters/RootState/current", 0);
 		fog = GetNode<Fog>("CameraPivot/Camera3D/Fog");
-		fog.UncoverGauss(GlobalPosition);
+		PositionChanged += Events.PlayerPositionChanged;
     }
 
 
