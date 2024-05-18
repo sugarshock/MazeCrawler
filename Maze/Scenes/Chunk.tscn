@@ -1,9 +1,26 @@
-[gd_scene load_steps=4 format=3 uid="uid://b0bf852mxqm5b"]
+[gd_scene load_steps=8 format=3 uid="uid://b0bf852mxqm5b"]
 
 [ext_resource type="Script" path="res://Maze/Scripts/Chunk.cs" id="1_scp41"]
 [ext_resource type="MeshLibrary" uid="uid://b7xhonxf2v1i7" path="res://Maze/Models/MazeMeshLib.tres" id="1_y7n5b"]
+[ext_resource type="Shader" path="res://Maze/Grass/grass.gdshader" id="3_21dkn"]
+[ext_resource type="Script" path="res://Maze/Grass/GrassMultiMesh.cs" id="3_60xba"]
+[ext_resource type="ArrayMesh" uid="uid://dompybwe21rld" path="res://Maze/Grass/GrassMesh.mesh" id="5_s3uns"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ra54i"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_n2gap"]
+render_priority = 0
+shader = ExtResource("3_21dkn")
+shader_parameter/character_position = Vector3(0, 0, 0)
+shader_parameter/character_radius = 3.0
+shader_parameter/character_push_strength = 1.0
+shader_parameter/color_top = Color(0.31603, 0.78, 0.1326, 1)
+shader_parameter/color_bottom = Color(0, 0.396078, 0, 1)
+shader_parameter/deg_sway_pitch = 80.0
+shader_parameter/deg_sway_yaw = 45.0
+shader_parameter/wind_scale = 4.0
+shader_parameter/wind_speed = 1.0
+shader_parameter/wind_direction = Vector3(0, 0, -1)
 
 [node name="Chunk" type="GridMap"]
 mesh_library = ExtResource("1_y7n5b")
@@ -15,3 +32,10 @@ script = ExtResource("1_scp41")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="TriggerArea"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("BoxShape3D_ra54i")
+
+[node name="GrassMultiMesh" type="MultiMeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.979464, 0)
+material_override = SubResource("ShaderMaterial_n2gap")
+script = ExtResource("3_60xba")
+GrassMesh = ExtResource("5_s3uns")
+Density = 100.0
