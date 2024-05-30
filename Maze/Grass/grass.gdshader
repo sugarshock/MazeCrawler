@@ -99,7 +99,7 @@ void vertex() {
 	dir_to_character = normalize(dir_to_character);
 
 	// sample the curve based on how far we are from the character, in normalized coordinates
-	float falloff_curve = texture(character_distance_falloff_curve, vec2(falloff)).x;
+	float falloff_curve = texture(character_distance_falloff_curve, vec2(falloff)).y;
 	// direction to character is inverted because we want to point away from it
 	VERTEX += normalize(-dir_to_character) * falloff_curve * character_push_strength * displacement_affect;
 }

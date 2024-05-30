@@ -19,6 +19,7 @@ public partial class Chunk : GridMap
 	
 	
 	private Area3D _triggerArea;
+	public MultiMeshInstance3D Grass;
 	
 	
 	
@@ -32,6 +33,10 @@ public partial class Chunk : GridMap
 		_triggerArea.Position = Aabb.GetCenter();
 		_triggerArea.Scale = Aabb.Size;
 		_triggerArea.BodyEntered += OnBodyEntered;
+
+		Grass = GetNode<MultiMeshInstance3D>("GrassMultiMesh");
+		Grass.Position = Aabb.GetCenter() with { Y = 0 };
+		//_grass.Scale = Aabb.Size;
 	}
 	
 	public Chunk Setup(Maze maze, Vector3I minCell, Vector3I maxCell)

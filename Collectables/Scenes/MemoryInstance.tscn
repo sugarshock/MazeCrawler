@@ -1,0 +1,28 @@
+[gd_scene load_steps=5 format=3 uid="uid://chuviykjruj4o"]
+
+[ext_resource type="Script" path="res://Collectables/Scripts/MemoryInstance.cs" id="1_e6xli"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_13guc"]
+albedo_color = Color(0, 0.734055, 0.734555, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_4qame"]
+radius = 0.12
+height = 1.0
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_6jqkq"]
+radius = 0.732461
+
+[node name="MemoryInstance" type="Node3D"]
+script = ExtResource("1_e6xli")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0.970881, 0)
+material_override = SubResource("StandardMaterial3D_13guc")
+mesh = SubResource("CapsuleMesh_4qame")
+
+[node name="Area3D" type="Area3D" parent="."]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0.955446, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0586929, 0)
+shape = SubResource("SphereShape3D_6jqkq")

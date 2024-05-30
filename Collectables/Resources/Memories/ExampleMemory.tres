@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="Memory" load_steps=4 format=3 uid="uid://0630i1donn2s"]
+
+[ext_resource type="Script" path="res://Collectables/Scripts/Memory.cs" id="1_pg5u5"]
+[ext_resource type="AudioStream" uid="uid://c52oawxbn24li" path="res://Collectables/Assets/Sounds/436408__arnaud-coutancier__child-and-seagulls-at-grocerys-door.wav" id="1_xmkq5"]
+[ext_resource type="Texture2D" uid="uid://co4vl2nxd1m8h" path="res://Collectables/Assets/Images/ExampleMemory.jpeg" id="2_klhgl"]
+
+[resource]
+script = ExtResource("1_pg5u5")
+Text = "Salty breeze whipped Sarah's hair as she held the kite string taut. Above, a rainbow diamond danced against the endless blue, steered by tiny, excited hands. Laughter, carried on the wind, mingled with the cry of gulls."
+Image = ExtResource("2_klhgl")
+Audio = ExtResource("1_xmkq5")
+EpicId = ""
+SoulId = "ExampleSoul"

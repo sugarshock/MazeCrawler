@@ -23,6 +23,7 @@ public partial class Fog : MeshInstance3D
 		_material = MaterialOverride as ShaderMaterial;
 		_maze = GetTree().Root.GetNode<Maze>("/root/Maze");
 		Events.PlayerEnteredChunk += OnPlayerEntered;
+		Events.PlayerPositionChanged += OnPlayerPositionChanged;
 		//Visible = true;
 	}
 
@@ -39,6 +40,10 @@ public partial class Fog : MeshInstance3D
 	
 	public void OnPlayerPositionChanged(Vector3 position)
 	{
+		if(_currentChunk == null)
+			return;
+		var mat = (ShaderMaterial) _currentChunk?.Grass.MaterialOverride;
+		mat.SetShaderParameter("character_position", position);
 		UncoverGauss(position);
 	}
 	
@@ -135,7 +140,7 @@ public partial class Fog : MeshInstance3D
 		
 		//GD.Print("Offset:" + _material.GetShaderParameter("offset"));
 		//GD.Print("Uncovered area size:" + _material.GetShaderParameter("uncoveredWorldPositions").As<Texture2D>().GetSize());
-		ResourceSaver.Save(imageTexture, "res://uncovered.png");
+		//ResourceSaver.Save(imageTexture, "res://uncovered.png");
 
 
 	}

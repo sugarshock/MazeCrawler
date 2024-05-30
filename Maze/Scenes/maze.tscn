@@ -1,4 +1,4 @@
-[gd_scene load_steps=158 format=3 uid="uid://dkh0ws6jd7xvp"]
+[gd_scene load_steps=159 format=3 uid="uid://dkh0ws6jd7xvp"]
 
 [ext_resource type="Script" path="res://Maze/Scripts/Maze.cs" id="2_d5yy2"]
 [ext_resource type="Texture2D" uid="uid://bw8870mt57xvf" path="res://icon.svg" id="3_8j3lt"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://Maze/Scripts/WfcProcessor.cs" id="5_dl7jq"]
 [ext_resource type="Script" path="res://Maze/Scripts/RuleResource.cs" id="6_6j5n3"]
 [ext_resource type="Script" path="res://Maze/Scripts/RuleTableResource.cs" id="7_gwu61"]
+[ext_resource type="PackedScene" uid="uid://bpriln51htl1r" path="res://Collectables/Scenes/CollectableProcessor.tscn" id="7_ho1sh"]
 
 [sub_resource type="Resource" id="Resource_fq1ix"]
 script = ExtResource("6_6j5n3")
@@ -1227,19 +1228,19 @@ texture = ExtResource("3_8j3lt")
 transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 20, 6.09549, 20)
 
 [node name="Skeleton3D" parent="Player/Armature" index="0"]
-bones/0/position = Vector3(-2.90698e-11, 0.547779, 9.61434e-10)
+bones/0/position = Vector3(-3.57919e-11, 0.546192, 9.2847e-10)
 bones/0/rotation = Quaternion(-0.00888341, 1.19205e-07, -1.05898e-09, 0.999961)
 bones/1/rotation = Quaternion(0.101188, 3.52777e-14, 2.41252e-08, 0.994867)
-bones/2/rotation = Quaternion(-0.00352088, 0.00975585, 0.991782, -0.127519)
-bones/3/rotation = Quaternion(0.056032, -0.0404743, 0.155336, 0.985441)
-bones/4/rotation = Quaternion(0.0438277, 0.108166, 0.992909, -0.0226069)
-bones/5/rotation = Quaternion(-0.224135, 0.000377691, -0.0101757, 0.974505)
-bones/6/rotation = Quaternion(0.628821, 0.0457554, -0.0607545, 0.773821)
-bones/7/rotation = Quaternion(0.00418497, 0.00972243, 0.988388, 0.15158)
-bones/8/rotation = Quaternion(0.0326229, 0.0448795, -0.115672, 0.991737)
-bones/9/rotation = Quaternion(-0.0525153, 0.107749, 0.992579, 0.020459)
-bones/10/rotation = Quaternion(-0.222968, -0.000362009, 0.00399002, 0.974818)
-bones/11/rotation = Quaternion(0.6278, -0.0518756, 0.0672185, 0.77373)
+bones/2/rotation = Quaternion(-0.0036657, 0.00974907, 0.991093, -0.132764)
+bones/3/rotation = Quaternion(0.0733802, -0.0504909, 0.158787, 0.983287)
+bones/4/rotation = Quaternion(0.0437402, 0.114846, 0.992148, -0.0232439)
+bones/5/rotation = Quaternion(-0.23691, 0.000376515, -0.0107558, 0.971472)
+bones/6/rotation = Quaternion(0.633734, 0.0463444, -0.0602838, 0.769804)
+bones/7/rotation = Quaternion(0.00439807, 0.00971048, 0.987173, 0.159298)
+bones/8/rotation = Quaternion(0.0445148, 0.0559091, -0.109956, 0.991364)
+bones/9/rotation = Quaternion(-0.0524208, 0.114483, 0.99182, 0.0209739)
+bones/10/rotation = Quaternion(-0.235839, -0.000360884, 0.00422034, 0.971783)
+bones/11/rotation = Quaternion(0.632753, -0.0523984, 0.0668415, 0.769682)
 bones/13/rotation = Quaternion(0.00290683, 0.707101, -0.707101, -0.00290683)
 bones/15/rotation = Quaternion(-0.00290683, 0.707101, -0.707101, 0.00290683)
 
@@ -1250,5 +1251,7 @@ omni_range = 9.0
 [node name="WfcProcessor" type="Node3D" parent="."]
 script = ExtResource("5_dl7jq")
 RuleTable = SubResource("Resource_s6rws")
+
+[node name="CollectableProcessor" parent="." instance=ExtResource("7_ho1sh")]
 
 [editable path="Player"]

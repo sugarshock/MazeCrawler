@@ -16,12 +16,14 @@ public partial class Maze : Node
 	
 	public HashSet<Vector3I> Visited { get; init; } = new HashSet<Vector3I>();
 	private WfcProcessor _wfcProcessor;
+	private CollectableProcessor _collectableProcessor;
 	
 	
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
 		_wfcProcessor = GetNode<WfcProcessor>("WfcProcessor");
+		_collectableProcessor = GetNode<CollectableProcessor>("CollectableProcessor");
 		Events.PlayerEnteredChunk += BuildSurroundingChunks;
 		BuildChunk(new Vector3I(0,0,3));
 	}
@@ -62,6 +64,7 @@ public partial class Maze : Node
 		GD.Print("Starting to dig");
 		var possibleExits = Dig(entrance, chunk);
 		SelectExits(chunk, 4, possibleExits);
+		_collectableProcessor.ApplyTo(chunk, 1, 1, 1);
 		_wfcProcessor.ApplyTo(chunk, chunk.MinCell.Y);
 	}
 	

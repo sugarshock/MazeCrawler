@@ -19,9 +19,9 @@ public partial class GrassMultiMesh : MultiMeshInstance3D
 	{
 		_grassFactory = ResourceLoader.Load<GDScript>("res://Maze/Grass/grass_factory.gd");
 		var mesh = new PlaneMesh();
-		mesh.Size = new Vector2(10, 10);
-		mesh.SubdivideWidth = 100;
-		mesh.SubdivideDepth = 100;
+		mesh.Size = new Vector2(100, 100);
+		mesh.SubdivideWidth = 10;
+		mesh.SubdivideDepth = 10;
 		
 		var arraymesh = new ArrayMesh();
 		arraymesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, mesh.GetMeshArrays());

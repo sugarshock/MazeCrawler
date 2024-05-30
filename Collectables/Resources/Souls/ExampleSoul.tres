@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="Soul" load_steps=2 format=3 uid="uid://csl5hcu81pmjx"]
+
+[ext_resource type="Script" path="res://Collectables/Scripts/Soul.cs" id="1_3g5in"]
+
+[resource]
+script = ExtResource("1_3g5in")
+Id = "ExampleSoul"

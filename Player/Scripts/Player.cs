@@ -13,6 +13,7 @@ public partial class Player : CharacterBody3D
 
 	public Node3D Armature;
 	public AnimationTree AnimTree;
+	public Inventory Inventory;
 	private Node3D cameraPivot;
 	private Vector3 internalVelocity = Vector3.Zero;
 	private Fog fog;
@@ -27,6 +28,7 @@ public partial class Player : CharacterBody3D
 
     public override void _Ready()
     {
+	    Inventory = GetNode<Inventory>("Inventory");
      	cameraPivot = GetNode<Node3D>("CameraPivot");
 		Armature = GetNode<Node3D>("Armature");
 		AnimTree = GetNode<AnimationTree>("AnimationTree");
@@ -70,7 +72,7 @@ public partial class Player : CharacterBody3D
 		if (!Velocity.IsZeroApprox())
 		{
 			PositionChanged?.Invoke(GlobalPosition);
-			fog.UncoverGauss(GlobalPosition);
+			//fog.UncoverGauss(GlobalPosition);
 		}
 			
 	}
