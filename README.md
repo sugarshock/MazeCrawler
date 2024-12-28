@@ -12,13 +12,14 @@ The maze is procedurally generated in chunks, with each chunk being created thro
 Each chunk has clearly defined exits that function as the adjacent chunk's entrance.
 Walls are initially created as simple uniform blocks on a Godot GridMap.
 
-## Wave Function Collapse
-The second step of the pipeline deploys the Wave Function Collapse algorithm to replace the wall blocks with context-sensitive 3D wall models.
-
 https://github.com/user-attachments/assets/c6be44c1-5cab-42b7-871e-d00d342efa1f
 
+## Wave Function Collapse
+The second step of the pipeline deploys the Wave Function Collapse algorithm to replace the wall blocks with context-sensitive 3D wall models.
 The WFC rule table is inefficiently generated from a manually curated reference scene.
 For further explanation of the WFC algorithm, please refer to ![this guide](https://robertheaton.com/2018/12/17/wavefunction-collapse-algorithm/).
+
+https://github.com/user-attachments/assets/2953bb79-7f7b-4bd1-8f47-825e3e632480
 
 
 ## Fog of War Shader
