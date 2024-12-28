@@ -14,6 +14,7 @@ Walls are initially created as simple uniform blocks on a Godot GridMap.
 
 ## Wave Function Collapse
 The second step of the pipeline deploys the Wave Function Collapse algorithm to replace the wall blocks with context-sensitive 3D wall models.
+
 https://github.com/user-attachments/assets/c6be44c1-5cab-42b7-871e-d00d342efa1f
 
 The WFC rule table is inefficiently generated from a manually curated reference scene.
