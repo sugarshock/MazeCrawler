@@ -19,8 +19,7 @@ The second step of the pipeline deploys the Wave Function Collapse algorithm to 
 The WFC rule table is inefficiently generated from a manually curated reference scene.
 For further explanation of the WFC algorithm, please refer to ![this guide](https://robertheaton.com/2018/12/17/wavefunction-collapse-algorithm/).
 
-https://github.com/user-attachments/assets/2953bb79-7f7b-4bd1-8f47-825e3e632480
-
+https://github.com/user-attachments/assets/fcdf8c55-eb81-4c89-8f01-0a687f8a7505
 
 ## Fog of War Shader
 The fog of war effect relies on a dynamic, discrete-resolution visibility map for each chunk. The visibility maps are stitched together and passed to a shader plane in front of the camera as a texture.
