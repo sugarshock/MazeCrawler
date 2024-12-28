@@ -17,7 +17,7 @@ https://github.com/user-attachments/assets/c6be44c1-5cab-42b7-871e-d00d342efa1f
 ## Wave Function Collapse
 The second step of the pipeline deploys the Wave Function Collapse algorithm to replace the wall blocks with context-sensitive 3D wall models.
 The WFC rule table is inefficiently generated from a manually curated reference scene.
-For further explanation of the WFC algorithm, please refer to ![this guide](https://robertheaton.com/2018/12/17/wavefunction-collapse-algorithm/).
+For further explanation of the WFC algorithm, please refer to [this guide](https://robertheaton.com/2018/12/17/wavefunction-collapse-algorithm/).
 
 https://github.com/user-attachments/assets/fcdf8c55-eb81-4c89-8f01-0a687f8a7505
 
