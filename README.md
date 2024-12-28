@@ -12,7 +12,7 @@ The maze is procedurally generated in chunks, with each chunk being created thro
 Each chunk has clearly defined exits that function as the adjacent chunk's entrance.
 Walls are initially created as simple uniform blocks on a Godot GridMap.
 
-## Wave Funtion Collapse
+## Wave Function Collapse
 The second step of the pipeline deploys the Wave Function Collapse algorithm to replace the wall blocks with context-sensitive 3D wall models.
 https://github.com/user-attachments/assets/c6be44c1-5cab-42b7-871e-d00d342efa1f
 
